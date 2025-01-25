@@ -31,7 +31,7 @@ io.on("connection", (socket) => {
 
     setTimeout(() => {
       // Проверяем, что сокет действительно в комнате
-      if (socket.rooms['general']) {
+      if (socket.rooms['general']) {  // Проверка, есть ли комната в объекте socket.rooms
         console.log(`Socket is in room 'general'`);
 
         // Отправляем всем пользователям в комнате, включая имя пользователя

@@ -38,7 +38,6 @@ var peer = new Peer({
   secure: true, // если используется HTTPS
 });
 
-
 let myAudioStream;
 navigator.mediaDevices
   .getUserMedia({
@@ -87,6 +86,7 @@ peer.on("open", (id) => {
   socket.emit("join-room", "general", id, user); // Передаем имя пользователя на сервер
 });
 
+// Добавляем поток аудио на страницу
 const addAudioStream = (stream, userName, userId) => {
   // Проверим, если уже есть контейнер с этим ID
   const existingUserContainer = document.querySelector(`.user-container[data-id="${userId}"]`);
