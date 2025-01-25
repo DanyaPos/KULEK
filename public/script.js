@@ -32,9 +32,10 @@ if (localStorage.getItem("password") === "1804" && user) {
 }
 
 var peer = new Peer({
-  host: "127.0.0.1",
+  host: "xn--b1agpo9a5c.xn--p1ai", // домен нужно указать в Punycode формате
   port: 3000,
   path: "/peerjs",
+  secure: true, // если используется HTTPS
 });
 
 let myAudioStream;
