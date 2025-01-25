@@ -38,6 +38,7 @@ var peer = new Peer({
   secure: true, // если используется HTTPS
 });
 
+
 let myAudioStream;
 navigator.mediaDevices
   .getUserMedia({
@@ -84,24 +85,7 @@ const connectToNewUser = (userId, stream, userName) => {
 peer.on("open", (id) => {
   console.log(`My peer ID is ${id}`);
   socket.emit("join-room", "general", id, user); // Передаем имя пользователя на сервер
-
-  // Получаем всех текущих пользователей (например, через событие 'initial-users')
-  socket.on("initial-users", (users) => {
-    users.forEach((user) => {
-      // Перебираем всех пользователей и подключаемся к ним
-      if (user.id !== id) {
-        connectToNewUser(user.id, myAudioStream, user.name); // Подключаемся к каждому
-      }
-    });
-  });
 });
-
-socket.on("user-connected", (userId, userName) => {
-  console.log(`User connected: ${userName} (ID: ${userId})`);
-  connectToNewUser(userId, myAudioStream, userName); // Подключаемся к каждому новому пользователю
-});
-
-
 
 const addAudioStream = (stream, userName, userId) => {
   // Проверим, если уже есть контейнер с этим ID
@@ -144,7 +128,9 @@ const addAudioStream = (stream, userName, userId) => {
 };
 
 // Логика для кнопок
+const inviteButton = document.querySelector("#inviteButton");
 const muteButton = document.querySelector("#muteButton");
+const disconnectBtn = document.querySelector("#disconnect");
 
 muteButton.addEventListener("click", () => {
   const enabled = myAudioStream.getAudioTracks()[0].enabled;
@@ -159,4 +145,14 @@ muteButton.addEventListener("click", () => {
     muteButton.classList.toggle("background_red");
     muteButton.innerHTML = html;
   }
+});
+
+disconnectBtn.addEventListener("click", () => {
+  peer.destroy();
+  const myAudioElement = document.querySelector("audio");
+  if (myAudioElement) {
+    myAudioElement.remove();
+  }
+  socket.emit("disconnect");
+  window.location.href = "https://www.google.com";
 });

@@ -19,43 +19,33 @@ app.get('/', (req, res) => {
   res.render("room", { roomId: 'general' });
 });
 
-// Список всех пользователей в комнате
-let usersInRoom = [];
-
 io.on("connection", (socket) => {
   console.log("A user connected");
 
   socket.on("join-room", (roomId, userId, userName) => {
-    // Проверка на наличие данных
-    if (!userId || !userName) {
-      console.log("User ID or User Name is missing");
-      return;
-    }
+    // Теперь передаем также имя пользователя
+    console.log(`User ${userName} with ID ${userId} joined room 'general'`);
 
-    // Добавляем пользователя в список
-    usersInRoom.push({ id: userId, name: userName });
-
-    // Присоединяем сокет к комнате
-    socket.join(roomId);
+    // Присоединяем сокет к общей комнате
+    socket.join('general');
 
     setTimeout(() => {
-      // Отправляем список всех пользователей, включая нового
-      io.to(roomId).emit("user-connected", userId, userName);
+      // Проверяем, что сокет действительно в комнате
+      if (socket.rooms.has('general')) {
+        console.log(`Socket is in room 'general'`);
 
-      // Отправляем список всех пользователей в комнате (для нового клиента)
-      io.to(socket.id).emit("initial-users", usersInRoom);
+        // Отправляем всем пользователям в комнате, включая имя пользователя
+        io.to('general').emit("user-connected", userId, userName);
+      } else {
+        console.log(`Socket is NOT in room 'general'`);
+      }
     }, 1000);
 
-    // Обрабатываем отключение пользователя
     socket.on("disconnect", () => {
       console.log("User Disconnected");
-      // Удаляем пользователя из списка
-      usersInRoom = usersInRoom.filter(user => user.id !== userId);
       io.emit("user-disconnected", userId);
     });
   });
 });
 
-server.listen(process.env.PORT || 3000, () => {
-  console.log('Server is running on port 3000');
-});
+server.listen(process.env.PORT || 3000);
