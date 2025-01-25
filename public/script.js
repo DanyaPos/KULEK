@@ -39,6 +39,7 @@ var peer = new Peer({
 });
 
 let myAudioStream;
+let microphoneEnabled = true; // Статус микрофона, по умолчанию включен
 navigator.mediaDevices
   .getUserMedia({
     audio: true,
@@ -68,6 +69,17 @@ navigator.mediaDevices
         userContainer.remove(); // Удаляем контейнер пользователя
       }
     });
+
+    socket.on("microphone-status", (userId, status) => {
+      console.log(`User ${userId} microphone status: ${status}`);
+      const userContainer = document.querySelector(`.user-container[data-id="${userId}"]`);
+      if (userContainer) {
+        const audio = userContainer.querySelector("audio");
+        if (audio) {
+          audio.muted = !status; // Мутим или размущаем аудио
+        }
+      }
+    });
   });
 
 const connectToNewUser = (userId, stream, userName) => {
@@ -83,43 +95,32 @@ const connectToNewUser = (userId, stream, userName) => {
 
 peer.on("open", (id) => {
   console.log(`My peer ID is ${id}`);
-  // Вместо подключения каждый раз, когда пользователь переходит в комнату, сохраняем roomId.
-  if (user && localStorage.getItem("roomId")) {
-    socket.emit("join-room", localStorage.getItem("roomId"), id, user); // Переподключаем в ту же комнату
-  } else {
-    socket.emit("join-room", "general", id, user); // Подключение в комнату по умолчанию
-    localStorage.setItem("roomId", "general"); // Сохранение текущей комнаты
-  }
+  socket.emit("join-room", "general", id, user); // Передаем имя пользователя на сервер
 });
 
 const addAudioStream = (stream, userName, userId) => {
-  // Проверим, если уже есть контейнер с этим ID
   const existingUserContainer = document.querySelector(`.user-container[data-id="${userId}"]`);
   if (existingUserContainer) {
     return; // Если контейнер уже существует, не добавляем новый
   }
 
-  // Создаем контейнер пользователя
   const userContainer = document.createElement("div");
   userContainer.classList.add("user-container");
-  userContainer.dataset.name = userName; // Сохраняем имя
-  userContainer.dataset.id = userId; // Сохраняем уникальный ID
+  userContainer.dataset.name = userName;
+  userContainer.dataset.id = userId;
 
-  // Добавляем изображение
   const img = document.createElement("img");
   img.src = "132123.jpg"; // Путь к картинке
   img.alt = userName;
   img.classList.add("user-image");
 
-  // Добавляем подпись с именем под аватарку
   const nameLabel = document.createElement("div");
-  nameLabel.textContent = userName; // Отображаем имя
+  nameLabel.textContent = userName;
   nameLabel.classList.add("name-label");
 
   userContainer.appendChild(img);
-  userContainer.appendChild(nameLabel); // Переносим подпись под аватарку
+  userContainer.appendChild(nameLabel);
 
-  // Если это не наш собственный поток, добавляем аудио
   if (userId !== peer.id) {
     const audio = document.createElement("audio");
     audio.srcObject = stream;
@@ -133,23 +134,19 @@ const addAudioStream = (stream, userName, userId) => {
 };
 
 // Логика для кнопок
-const inviteButton = document.querySelector("#inviteButton");
 const muteButton = document.querySelector("#muteButton");
 const disconnectBtn = document.querySelector("#disconnect");
 
 muteButton.addEventListener("click", () => {
-  const enabled = myAudioStream.getAudioTracks()[0].enabled;
-  if (enabled) {
-    myAudioStream.getAudioTracks()[0].enabled = false;
-    html = `<i class="fas fa-microphone-slash"></i>`;
-    muteButton.classList.toggle("background_red");
-    muteButton.innerHTML = html;
-  } else {
-    myAudioStream.getAudioTracks()[0].enabled = true;
-    html = `<i class="fas fa-microphone"></i>`;
-    muteButton.classList.toggle("background_red");
-    muteButton.innerHTML = html;
-  }
+  microphoneEnabled = !microphoneEnabled;
+  myAudioStream.getAudioTracks()[0].enabled = microphoneEnabled;
+  socket.emit("microphone-status", peer.id, microphoneEnabled);
+
+  html = microphoneEnabled
+    ? `<i class="fas fa-microphone"></i>`
+    : `<i class="fas fa-microphone-slash"></i>`;
+  muteButton.classList.toggle("background_red");
+  muteButton.innerHTML = html;
 });
 
 disconnectBtn.addEventListener("click", () => {

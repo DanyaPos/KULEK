@@ -23,28 +23,23 @@ io.on("connection", (socket) => {
   console.log("A user connected");
 
   socket.on("join-room", (roomId, userId, userName) => {
-    // Теперь передаем также имя пользователя
-    console.log(`User ${userName} with ID ${userId} joined room 'general'`);
+    console.log(`User ${userName} with ID ${userId} joined room '${roomId}'`);
 
-    // Присоединяем сокет к общей комнате
-    socket.join('general');
+    // Присоединяем сокет к комнате
+    socket.join(roomId);
 
-    setTimeout(() => {
-      // Проверяем, что сокет действительно в комнате
-      if (socket.rooms['general']) {  // Проверка, есть ли комната в объекте socket.rooms
-        console.log(`Socket is in room 'general'`);
-
-        // Отправляем всем пользователям в комнате, включая имя пользователя
-        io.to('general').emit("user-connected", userId, userName);
-      } else {
-        console.log(`Socket is NOT in room 'general'`);
-      }
-    }, 1000);
+    // Отправляем всем пользователям в комнате, включая имя пользователя
+    io.to(roomId).emit("user-connected", userId, userName);
 
     socket.on("disconnect", () => {
       console.log("User Disconnected");
-      io.emit("user-disconnected", userId);
+      io.to(roomId).emit("user-disconnected", userId);
     });
+  });
+
+  socket.on("microphone-status", (userId, status) => {
+    console.log(`User ${userId} microphone status: ${status}`);
+    io.emit("microphone-status", userId, status); // Отправляем всем пользователям обновленный статус
   });
 });
 
