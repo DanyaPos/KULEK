@@ -40,6 +40,7 @@ var peer = new Peer({
 
 let myAudioStream;
 let microphoneEnabled = true; // Статус микрофона, по умолчанию включен
+
 navigator.mediaDevices
   .getUserMedia({
     audio: true,
