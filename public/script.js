@@ -83,10 +83,15 @@ const connectToNewUser = (userId, stream, userName) => {
 
 peer.on("open", (id) => {
   console.log(`My peer ID is ${id}`);
-  socket.emit("join-room", "general", id, user); // Передаем имя пользователя на сервер
+  // Вместо подключения каждый раз, когда пользователь переходит в комнату, сохраняем roomId.
+  if (user && localStorage.getItem("roomId")) {
+    socket.emit("join-room", localStorage.getItem("roomId"), id, user); // Переподключаем в ту же комнату
+  } else {
+    socket.emit("join-room", "general", id, user); // Подключение в комнату по умолчанию
+    localStorage.setItem("roomId", "general"); // Сохранение текущей комнаты
+  }
 });
 
-// Добавляем поток аудио на страницу
 const addAudioStream = (stream, userName, userId) => {
   // Проверим, если уже есть контейнер с этим ID
   const existingUserContainer = document.querySelector(`.user-container[data-id="${userId}"]`);
