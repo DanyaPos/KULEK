@@ -26,6 +26,12 @@ io.on("connection", (socket) => {
   console.log("A user connected");
 
   socket.on("join-room", (roomId, userId, userName) => {
+    // Проверка на наличие данных
+    if (!userId || !userName) {
+      console.log("User ID or User Name is missing");
+      return;
+    }
+
     // Добавляем пользователя в список
     usersInRoom.push({ id: userId, name: userName });
 
@@ -50,4 +56,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(process.env.PORT || 3000);
+server.listen(process.env.PORT || 3000, () => {
+  console.log('Server is running on port 3000');
+});
