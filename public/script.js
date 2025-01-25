@@ -32,7 +32,7 @@ if (localStorage.getItem("password") === "1804" && user) {
 }
 
 var peer = new Peer({
-  host: "xn--b1agpo9a5c.xn--p1ai", // домен нужно указать в Punycode формате
+  host: "xn--b1afhjbe8bm1g2a.xn--p1ai", // домен нужно указать в Punycode формате
   port: 3000,
   path: "/peerjs",
   secure: true, // если используется HTTPS
